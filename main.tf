@@ -130,20 +130,20 @@ resource "aws_memorydb_cluster" "profile" {
   subnet_group_name  = aws_memorydb_subnet_group.profile.id
 }
 
-data "aws_ami" "ubuntu" {
-  most_recent = true
+data "aws_ami" "amazon-linux-2" {
+ most_recent = true
 
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
-  }
 
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
+ filter {
+   name   = "owner-alias"
+   values = ["amazon"]
+ }
 
-  owners = ["099720109477"] # Canonical
+
+ filter {
+   name   = "name"
+   values = ["amzn2-ami-hvm*"]
+ }
 }
 
 resource "aws_key_pair" "redis-ec2-ssh-key" {
@@ -152,7 +152,7 @@ resource "aws_key_pair" "redis-ec2-ssh-key" {
 }
 
 resource "aws_instance" "redis-ec2" {
-  ami           = data.aws_ami.ubuntu.id
+  ami           = data.aws_ami.amazon-linux-2.id
   instance_type = "t2.micro"
 
   associate_public_ip_address = true
@@ -173,7 +173,7 @@ resource "terraform_data" "provision_server" {
     port = "22"
 
     host = aws_instance.redis-ec2.public_ip
-    user = "ubuntu"
+    user = "ec2-user"
 
     private_key = file("./.ssh/id_rsa")
 
