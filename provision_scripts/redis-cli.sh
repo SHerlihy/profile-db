@@ -1,6 +1,10 @@
 #!/bin/bash
 
-sudo apt -y install openssl-devel gcc
+sudo dpkg --configure -a
+find /var/lib/apt/lists -type f  |xargs rm -f >/dev/null \
+sudo apt -y update
+
+sudo apt -y install libssl-dev build-essential
 wget http://download.redis.io/redis-stable.tar.gz
 tar xvzf redis-stable.tar.gz
 cd redis-stable
