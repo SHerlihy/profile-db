@@ -1,4 +1,4 @@
-variable "redis_sg_id" {
+variable "profile_db_vpc_id" {
   type = string
 }
 

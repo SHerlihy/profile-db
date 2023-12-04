@@ -8,6 +8,48 @@ terraform {
 
   required_version = ">= 1.2.0"
 }
+resource "aws_internet_gateway" "gw" {
+  vpc_id = var.profile_db_vpc_id
+}
+
+resource "aws_route_table" "second_rt" {
+  vpc_id = var.profile_db_vpc_id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.gw.id
+  }
+}
+
+resource "aws_route_table_association" "public_subnet_asso_1" {
+  subnet_id      = var.redis_subnet_id
+  route_table_id = aws_route_table.second_rt.id
+}
+
+resource "aws_security_group" "proxy_sg" {
+  name   = "proxy_sg"
+  vpc_id = var.profile_db_vpc_id
+}
+
+resource "aws_security_group_rule" "ingress_ec2" {
+  type              = "ingress"
+  security_group_id = aws_security_group.proxy_sg.id
+
+  from_port   = 0
+  to_port     = 0
+  protocol    = "-1"
+  cidr_blocks = ["0.0.0.0/0"]
+}
+
+resource "aws_security_group_rule" "egress_ec2" {
+  type              = "egress"
+  security_group_id = aws_security_group.proxy_sg.id
+
+  from_port   = 0
+  to_port     = 0
+  protocol    = "-1"
+  cidr_blocks = ["0.0.0.0/0"]
+}
 
 data "aws_ami" "amazon-linux-2" {
   most_recent = true
@@ -38,7 +80,7 @@ resource "aws_instance" "redis-ec2" {
 
   subnet_id = var.redis_subnet_id
 
-  vpc_security_group_ids = [var.redis_sg_id]
+  vpc_security_group_ids = [aws_security_group.proxy_sg.id]
 
   key_name = aws_key_pair.profile_proxy.key_name
 }
